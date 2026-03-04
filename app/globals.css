@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/* ================================
+   ValeFood / Fintex Light Clean — Typography System
+   Font: Inter (via next/font)
+================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+
+  /* A fonte principal vem do next/font no <html class="..."> */
+  background: #ffffff;
+  color: #111827;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove highlight azul no mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Scroll clean */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(1, 27, 60, 0.25);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(1, 27, 60, 0.4);
+}
+
+/* ================================
+   Tipografia padronizada (global)
+   Use classes: .vf-title / .vf-subtitle / .vf-text / .vf-muted / .vf-small
+================================ */
+
+:root {
+  /* Tamanhos */
+  --vf-title: 20px;
+  --vf-subtitle: 14px;
+  --vf-text: 13px;
+  --vf-small: 12px;
+
+  /* Line-heights */
+  --vf-title-lh: 1.2;
+  --vf-subtitle-lh: 1.25;
+  --vf-text-lh: 1.35;
+  --vf-small-lh: 1.35;
+
+  /* Pesos */
+  --vf-title-w: 700;
+  --vf-subtitle-w: 600;
+  --vf-text-w: 500;
+  --vf-muted-w: 500;
+
+  /* Cores */
+  --vf-text-color: #111827;
+  --vf-muted-color: #6b7280;
+}
+
+/* Classes utilitárias globais */
+.vf-title {
+  font-size: var(--vf-title);
+  line-height: var(--vf-title-lh);
+  font-weight: var(--vf-title-w);
+  letter-spacing: -0.02em;
+  color: var(--vf-text-color);
+}
+
+.vf-subtitle {
+  font-size: var(--vf-subtitle);
+  line-height: var(--vf-subtitle-lh);
+  font-weight: var(--vf-subtitle-w);
+  letter-spacing: -0.01em;
+  color: var(--vf-text-color);
+}
+
+.vf-text {
+  font-size: var(--vf-text);
+  line-height: var(--vf-text-lh);
+  font-weight: var(--vf-text-w);
+  color: var(--vf-text-color);
+}
+
+.vf-muted {
+  font-size: var(--vf-text);
+  line-height: var(--vf-text-lh);
+  font-weight: var(--vf-muted-w);
+  color: var(--vf-muted-color);
+}
+
+.vf-small {
+  font-size: var(--vf-small);
+  line-height: var(--vf-small-lh);
+  font-weight: 500;
+  color: var(--vf-muted-color);
+}
+
+/* Garantir consistência em elementos comuns */
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  color: var(--vf-text-color);
+}
+
+p {
+  margin: 0;
+  color: var(--vf-text-color);
+}
+
+/* Inputs e botões herdarem fonte */
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
