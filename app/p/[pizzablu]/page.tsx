@@ -213,7 +213,7 @@ export default function LojaPage() {
 
   // ✅ Pizza Builder
   const [pizzaOpen, setPizzaOpen] = useState(false);
-  const [pizzaBase, setPizzaBase] = useState<Item | null>(null);
+  const [pizzaBase, setPizzaBase] = useState<any>(null);
 
   function addToCart(it: Item) {
     // Se for pizza (tamanho), abre o builder
