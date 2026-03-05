@@ -147,7 +147,10 @@ export default function LojaPage() {
   function scrollToSection(k: TabKey) {
     const el = getRef(k).current;
     if (!el) return;
-    const EXTRA_GAP = -120;
+
+    // ✅ antes era negativo e “empurrava” a seção pra baixo
+    const EXTRA_GAP = 12;
+
     const top = el.getBoundingClientRect().top + window.scrollY - (scrollOffset + EXTRA_GAP);
     window.scrollTo({ top, behavior: "smooth" });
   }
@@ -161,7 +164,7 @@ export default function LojaPage() {
 
     setSearchOpen(false);
     requestAnimationFrame(() => {
-      const EXTRA_GAP = -96;
+      const EXTRA_GAP = 12;
       const top = el.getBoundingClientRect().top + window.scrollY - (scrollOffset + EXTRA_GAP);
       window.scrollTo({ top, behavior: "smooth" });
     });
@@ -216,7 +219,6 @@ export default function LojaPage() {
   const [pizzaBase, setPizzaBase] = useState<any>(null);
 
   function addToCart(it: Item) {
-    // Se for pizza (tamanho), abre o builder
     const isPizzaSize =
       it.section === "pizza" &&
       (it.id === "pizza_pequena" || it.id === "pizza_grande" || it.id === "pizza_familia");
@@ -227,7 +229,6 @@ export default function LojaPage() {
       return;
     }
 
-    // bebidas/porções: direto
     cart.addItem({ id: it.id, name: it.title, price: it.priceNum, image: it.img });
   }
 
@@ -316,7 +317,10 @@ export default function LojaPage() {
                   {!!q && (
                     <div className="px-2 pb-2">
                       {results.length ? (
-                        <div className="max-h-[260px] overflow-auto rounded-2xl border" style={{ borderColor: "rgba(1,27,60,0.12)" }}>
+                        <div
+                          className="max-h-[260px] overflow-auto rounded-2xl border"
+                          style={{ borderColor: "rgba(1,27,60,0.12)" }}
+                        >
                           {results.map((it) => (
                             <button
                               key={it.id}
@@ -340,7 +344,10 @@ export default function LojaPage() {
                           ))}
                         </div>
                       ) : (
-                        <div className="rounded-2xl border px-4 py-4 text-[14px] font-semibold text-gray-600" style={{ borderColor: "rgba(1,27,60,0.12)" }}>
+                        <div
+                          className="rounded-2xl border px-4 py-4 text-[14px] font-semibold text-gray-600"
+                          style={{ borderColor: "rgba(1,27,60,0.12)" }}
+                        >
                           Nenhum item encontrado.
                         </div>
                       )}
@@ -359,7 +366,10 @@ export default function LojaPage() {
         <div className="px-4 pt-8">
           <div className="flex items-start gap-4">
             <div className="relative -mt-4 shrink-0">
-              <div className="flex items-center justify-center overflow-hidden rounded-2xl" style={{ width: 75, height: 75, background: BRAND }}>
+              <div
+                className="flex items-center justify-center overflow-hidden rounded-2xl"
+                style={{ width: 75, height: 75, background: BRAND }}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo-pizzablu.png" alt="Pizza Blu" className="h-full w-full object-cover" />
               </div>
@@ -416,7 +426,9 @@ export default function LojaPage() {
                   style={{ color: isActive ? TEXT : MUTED, fontWeight: 900 }}
                 >
                   {t.label}
-                  {isActive && <span className="absolute inset-x-6 bottom-0 h-[2px] rounded-full" style={{ background: "#4dd5f8" }} />}
+                  {isActive && (
+                    <span className="absolute inset-x-6 bottom-0 h-[2px] rounded-full" style={{ background: "#4dd5f8" }} />
+                  )}
                 </button>
               );
             })}
@@ -509,7 +521,8 @@ export default function LojaPage() {
               style={{
                 background: `linear-gradient(180deg, ${AQUA} 0%, rgba(79,220,255,0.72) 100%)`,
                 color: BRAND,
-                boxShadow: "0 18px 40px rgba(79,220,255,0.18), 0 0 0 1px rgba(255,255,255,0.14) inset",
+                boxShadow:
+                  "0 18px 40px rgba(79,220,255,0.18), 0 0 0 1px rgba(255,255,255,0.14) inset",
               }}
             >
               Ver carrinho ({cart.itemsCount})
@@ -557,12 +570,17 @@ function RatingBlock({ rating, total }: { rating: string; total: string }) {
 function PromoCardExpanded({ img }: { img: string }) {
   return (
     <div className="relative w-1/3 aspect-[3/4] overflow-hidden bg-gray-100">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={img} alt="" className="h-full w-full object-cover" />
     </div>
   );
 }
 
+/**
+ * ✅ AJUSTE DE ESPAÇAMENTO (MOBILE):
+ * - header da seção menor no mobile (pt-4)
+ * - item com padding mais consistente (py-3)
+ * - separador colado e sem “respiro” extra (dentro do botão e só entre itens)
+ */
 function Section({
   title,
   lineColor,
@@ -578,7 +596,7 @@ function Section({
 }) {
   return (
     <div className="px-0">
-      <div className="px-4 pt-6">
+      <div className="px-4 pt-4 sm:pt-6">
         <div className="text-[22px] font-extrabold tracking-[-0.02em]" style={{ color: "#47c1e0" }}>
           {title}
         </div>
@@ -586,22 +604,16 @@ function Section({
       </div>
 
       <div className="pb-2">
-        {items.map((c) => (
+        {items.map((c, idx) => (
           <div key={c.id} className="px-4" ref={(el) => onItemMount(c.id, el as unknown as HTMLElement | null)}>
             <button
               type="button"
               onClick={() => onAdd(c)}
-              className={cn("w-full text-left rounded-2xl transition-transform duration-150", "active:scale-[0.985]")}
+              className={cn("w-full text-left transition-transform duration-150", "active:scale-[0.985]")}
               style={{ WebkitTapHighlightColor: "transparent" }}
               aria-label={`Adicionar ${c.title} ao carrinho`}
             >
-              <div
-                className={cn("flex items-center justify-between gap-3 py-2 sm:gap-4 sm:py-2 rounded-2xl")}
-                style={{
-                  transition: "box-shadow 150ms ease, transform 150ms ease, background 150ms ease",
-                  boxShadow: "0 1px 0 rgba(255,255,255,0.92) inset",
-                }}
-              >
+              <div className={cn("flex items-center justify-between gap-3 sm:gap-4 py-3 sm:py-3")}>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[20px] sm:text-[20px] font-semibold tracking-[-0.02em] text-black">
                     {c.title}
@@ -611,15 +623,14 @@ function Section({
                     <div className="mt-1 text-[14px] sm:text-[15px] leading-snug text-gray-500">{c.subtitle}</div>
                   )}
 
-                  <div className="mt-2 flex items-center gap-3">
+                  <div className="mt-2">
                     <div className="whitespace-nowrap text-[18px] sm:text-[18px] font-bold text-black">{c.price}</div>
                   </div>
                 </div>
 
                 <div className="shrink-0">
-                  <div className="h-[78px] w-[108px] sm:h-[92px] sm:w-[132px] overflow-hidden rounded-2xl bg-gray-100 grid place-items-center">
+                  <div className="h-[72px] w-[104px] sm:h-[92px] sm:w-[132px] overflow-hidden rounded-2xl bg-gray-100 grid place-items-center">
                     {c.img ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={c.img} alt="" className="h-full w-full object-cover" />
                     ) : (
                       <div className="text-[34px]" aria-hidden="true">
@@ -629,9 +640,10 @@ function Section({
                   </div>
                 </div>
               </div>
-            </button>
 
-            <div className="h-[1px] w-full" style={{ background: lineColor }} />
+              {/* ✅ separador colado: só entre itens */}
+              {idx !== items.length - 1 && <div className="h-[1px] w-full" style={{ background: lineColor }} />}
+            </button>
           </div>
         ))}
       </div>

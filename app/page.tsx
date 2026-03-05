@@ -21,9 +21,8 @@ type Chip = {
 };
 
 type Store = {
-  id: string;
+  id: "gostinhodamanha" | "havana" | "pizzablu" | "sabordomeiodia" | "velhooeste";
   name: string;
-  /** ✅ agora é logo (imagem), não emoji */
   logoSrc: string;
   isNew?: boolean;
   rating: number;
@@ -221,7 +220,13 @@ function Icon({
   if (name === "truck")
     return (
       <svg viewBox="0 0 24 24" className={className} fill="none">
-        <path d="M3 7h11v10H3V7Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M3 7h11v10H3V7Z"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
         <path
           d="M14 10h4l3 3v4h-7v-7Z"
           stroke="currentColor"
@@ -234,6 +239,7 @@ function Icon({
       </svg>
     );
 
+  // spark
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none">
       <path
@@ -247,7 +253,6 @@ function Icon({
   );
 }
 
-/** tiles sem badge */
 function MenuTile({ label, icon }: { label: string; icon: Tile["icon"] }) {
   return (
     <div className="flex flex-col items-center gap-2">
@@ -274,7 +279,6 @@ function MenuTile({ label, icon }: { label: string; icon: Tile["icon"] }) {
   );
 }
 
-/** ✅ CATEGORIAS IGUAL PRINT */
 function CategoryStrip({
   items,
   activeKey,
@@ -309,6 +313,7 @@ function CategoryStrip({
                   transform: active ? "translateY(-1px)" : "translateY(0)",
                 }}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={c.imgSrc} alt={c.label} className="h-full w-full object-contain select-none" draggable={false} />
               </div>
 
@@ -325,10 +330,9 @@ function CategoryStrip({
   );
 }
 
-/** ✅ STORE LIST row (sem coração, logo no lugar do ícone) */
 function StoreRow({ s }: { s: Store }) {
   return (
-    <a href={`/p/${s.id}`} className="block" style={{ WebkitTapHighlightColor: "transparent" }}>
+    <Link href={`/lojas/${s.id}`} className="block" style={{ WebkitTapHighlightColor: "transparent" }}>
       <div
         className="flex items-center gap-4 py-4 px-4 transition"
         style={{
@@ -338,7 +342,6 @@ function StoreRow({ s }: { s: Store }) {
           boxShadow: "0 8px 20px rgba(71,193,224,0.12)",
         }}
       >
-        {/* ✅ LOGO da loja no lugar do emoji */}
         <div
           className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl"
           style={{
@@ -346,12 +349,13 @@ function StoreRow({ s }: { s: Store }) {
             border: "1px solid rgba(71,193,224,0.35)",
           }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-  src={s.logoSrc}
-  alt={`Logo ${s.name}`}
-  className="h- w- object-contain select-none"
-  draggable={false}
-/>
+            src={s.logoSrc}
+            alt={`Logo ${s.name}`}
+            className="h-full w-full object-contain select-none"
+            draggable={false}
+          />
         </div>
 
         <div className="min-w-0 flex-1">
@@ -359,11 +363,7 @@ function StoreRow({ s }: { s: Store }) {
             <div className="truncate text-[18px] font-semibold" style={{ color: BRAND }}>
               {s.name}
             </div>
-            {s.isNew && (
-              <span className="shrink-0 text-[14px] font-semibold text-orange-600">
-                novo!
-              </span>
-            )}
+            {s.isNew && <span className="shrink-0 text-[14px] font-semibold text-orange-600">novo!</span>}
           </div>
 
           <div className="mt-1 flex flex-wrap items-center gap-2 text-[15px] text-black/60">
@@ -390,12 +390,10 @@ function StoreRow({ s }: { s: Store }) {
             </div>
           )}
         </div>
-
-        {/* ✅ removido o coração (o espaço some e o card fica limpo igual print) */}
       </div>
 
       <div className="h-3" />
-    </a>
+    </Link>
   );
 }
 
@@ -421,13 +419,14 @@ export default function Page() {
     []
   );
 
+  // ✅ IDs agora BATEM 1:1 com suas pastas em /app/lojas/...
   const stores: Store[] = useMemo(
     () => [
       { id: "havana", name: "Havana", logoSrc: "/logo-havana.jpg", rating: 4.8, eta: "35 min", fee: "R$8,00", note: "" },
-      { id: "sabor-do-meio-dia", name: "Sabor do Meio Dia", logoSrc: "/logo-sabordomeiodia.jpg", rating: 4.6, eta: "40min", fee: "Grátis" },
-      { id: "gostinho-da-manha", name: "Gostinho da Manhã", logoSrc: "logo-gostinhodamanha.jpg", rating: 4.9, eta: "30min", fee: "R$10,00" },
-      { id: "pizza-blu", name: "Pizza Blu", logoSrc: "/logo-pizzablu.png", rating: 4.8, eta: "45 min", fee: "R$ 4,99" },
-      { id: "velho-oeste", name: "Velho Oeste", logoSrc: "/logo-velhooeste.jpeg", rating: 4.7, eta: "50 min", fee: "R$6,00" },
+      { id: "sabordomeiodia", name: "Sabor do Meio Dia", logoSrc: "/logo-sabordomeiodia.jpg", rating: 4.6, eta: "40 min", fee: "Grátis" },
+      { id: "gostinhodamanha", name: "Gostinho da Manhã", logoSrc: "/logo-gostinhodamanha.jpg", rating: 4.9, eta: "30 min", fee: "R$10,00" },
+      { id: "pizzablu", name: "Pizza Blu", logoSrc: "/logo-pizzablu.png", rating: 4.8, eta: "45 min", fee: "R$ 4,99" },
+      { id: "velhooeste", name: "Velho Oeste", logoSrc: "/logo-velhooeste.jpeg", rating: 4.7, eta: "50 min", fee: "R$6,00" },
     ],
     []
   );
@@ -446,7 +445,6 @@ export default function Page() {
   const [activeChip, setActiveChip] = useState<string>("pizza");
   const [activeTab, setActiveTab] = useState<TabKey>("inicio");
 
-  // ✅ essa tela é HOME (/) e lista lojas
   const filteredStores = useMemo(() => stores, [stores]);
 
   return (
@@ -457,9 +455,7 @@ export default function Page() {
           "radial-gradient(980px 580px at 80% -10%, rgb(255, 255, 255), transparent 60%), radial-gradient(900px 520px at -10% 10%, rgba(1,27,60,0.05), transparent 55%), linear-gradient(180deg,#f7f8fb,#f1f4f8 70%)",
       }}
     >
-      {/* ✅ HOME CONTENT (mantém tua tela atual aqui) */}
       <div className="mx-auto w-full max-w-[430px] px-3 pb-24 pt-4">
-        {/* TOPBAR */}
         <div className="flex items-center justify-between gap-3">
           <button
             className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-4 py-3"
@@ -488,7 +484,6 @@ export default function Page() {
           </button>
         </div>
 
-        {/* 4 ICONS */}
         <div className="mt-4">
           <div className="grid grid-cols-4 gap-4">
             {tiles.map((t) => (
@@ -497,13 +492,10 @@ export default function Page() {
           </div>
         </div>
 
-        {/* CATEGORIAS */}
         <CategoryStrip items={catChips} activeKey={activeChip} onPick={setActiveChip} />
 
-        {/* TITLE */}
         <div className="mt-5 text-[18px] font-semibold text-black/90">Perto de você</div>
 
-        {/* LISTA */}
         <div className="mt-3">
           {filteredStores.map((s) => (
             <StoreRow key={s.id} s={s} />
@@ -511,7 +503,6 @@ export default function Page() {
         </div>
       </div>
 
-      {/* ✅ BOTTOM NAV — agora vira ROTAS reais */}
       <div className="fixed bottom-0 left-0 right-0">
         <div className="mx-auto w-full max-w-[430px] px-4 pb-5">
           <div
@@ -545,10 +536,7 @@ export default function Page() {
                     className="py-1.5 text-center transition active:scale-[0.97]"
                     style={{ WebkitTapHighlightColor: "transparent" }}
                   >
-                    <div
-                      className="mx-auto grid h-8 w-8 place-items-center"
-                      style={{ color: isActive ? BRAND : "rgba(0,0,0,0.45)" }}
-                    >
+                    <div className="mx-auto grid h-8 w-8 place-items-center" style={{ color: isActive ? BRAND : "rgba(0,0,0,0.45)" }}>
                       <Icon name={it.icon} className="h-5 w-5" />
                     </div>
 

@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
  * - LocalStorage ÚNICO por tamanho (doce/salgada NÃO divide e NÃO zera)
  * - Abas (Salgadas/Doces) são só organização: seleção é única (não sobrescreve)
  * - Premium aparece nos itens premium (badge +R$ 12,00)
- * - Sem erro de hooks (nenhum hook depois de return condicional)
+ * - Sem erro de hooks (    nenhum hook depois de return condicional)
  */
 
 type Mode = "salgada" | "doce";
