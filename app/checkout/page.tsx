@@ -342,39 +342,37 @@ export default function CheckoutPage() {
         preco: num(item?.price ?? item?.preco ?? item?.unitPrice ?? 0, 0),
       }));
 
-      const paymentMethod =
-        pay === "pix"
-          ? "PIX"
-          : pay === "dinheiro"
-          ? "DINHEIRO"
-          : "CARTÃO NA ENTREGA";
-
-      const serviceType =
-        cart.state.deliveryType === "entrega" ? "ENTREGA" : "RETIRADA";
-
-      const observacoes = [cart.state.note, ref.trim()].filter(Boolean).join(" | ");
+      const observacoes = [cart.state.note, ref.trim()]
+        .filter(Boolean)
+        .join(" | ");
 
       const payload = {
-        customer_name: name.trim(),
-        customer_phone: phone.trim(),
+        cliente_nome: name.trim(),
+        cliente_telefone: phone.trim(),
         endereco: cart.state.deliveryType === "entrega" ? addr.trim() : "",
-        service_type: serviceType,
-        payment_method: paymentMethod,
-        troco: pay === "dinheiro" && troco.trim() ? trocoNum : 0,
-        r_inicial: cart.subtotal,
+        tipo_entrega: cart.state.deliveryType === "entrega" ? "entrega" : "retirada",
+        forma_pagamento:
+          pay === "pix"
+            ? "PIX"
+            : pay === "dinheiro"
+            ? "DINHEIRO"
+            : "CARTÃO NA ENTREGA",
+        troco_para: pay === "dinheiro" && troco.trim() ? trocoNum : 0,
+        subtotal: cart.subtotal,
         taxa_entrega: deliveryFee,
         total,
-        platform: "ValeFood",
-        responsavel: null,
-        status: "EM PRODUÇÃO",
         observacoes,
-        created_at: new Date().toISOString(),
         itens,
       };
 
       console.log("ENVIANDO PEDIDO", payload);
 
-      const res = await fetch("http://localhost:3001/api/orders", {
+      const API_BASE =
+        process.env.NEXT_PUBLIC_ORDERS_API_URL?.replace(/\/$/, "") || "";
+
+      const endpoint = `${API_BASE}/api/orders`;
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
