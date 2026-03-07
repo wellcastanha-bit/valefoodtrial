@@ -68,7 +68,7 @@ function Icon({
         aria-hidden="true"
       >
         <path
-          d="M8.2 7.2c.8-.8 2.1-.8 2.9 0l.9.9.9-.9c.8-.8 2.1-.8 2.9 0l1.1 1.1c.8.8.8 2.1 0 2.9l-.9.9.9.9c.8.8.8 2.1 0 2.9l-1.1 1.1c-.8.8-2.1.8-2.9 0l-.9-.9-.9.9c-.8.8-2.1.8-2.9 0l-1.1-1.1c-.8-.8-.8-2.1 0-2.9l.9-.9-.9-.9c-.8-.8-.8-2.1 0-2.9l1.1-1.1z"
+          d="M8.2 7.2c.8-.8 2.1-.8 2.9 0l.9.9.9-.9c.8-.8 2.1-.8 2.9 0l1.1 1.1c.8.8.8 2.1 0 2.9l-.9.9.9.9c.8.8.8 2.1 0 2.9l-1.1 1.1c-.8.8-2.1.8-2.9 0l-.9-.9-.9.9c-.8-.8-2.1-.8-2.9 0l-1.1-1.1c-.8-.8-.8-2.1 0-2.9l.9-.9-.9-.9c-.8-.8-.8-2.1 0-2.9l1.1-1.1z"
           stroke="currentColor"
           strokeWidth="1.8"
           strokeLinejoin="round"
@@ -106,7 +106,6 @@ function Icon({
       </svg>
     );
 
-  // cash
   return (
     <svg
       className={common}
@@ -209,6 +208,7 @@ function PayOption({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className="flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left transition active:scale-[0.99]"
       style={{
@@ -264,50 +264,52 @@ function safeFrom(v: string | null) {
   if (!raw) return "/";
   if (!raw.startsWith("/")) return "/";
   if (raw.startsWith("//")) return "/";
-  // evita loop pra checkout
   if (raw.startsWith("/checkout")) return "/";
   if (raw.startsWith("/valefood/checkout")) return "/";
   return raw;
 }
 
+function num(v: unknown, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 export default function CheckoutPage() {
   const cart = useCart();
 
-  // ✅ FIX HYDRATION: server e 1º render do client ficam iguais ("/"), e só depois atualiza pelo querystring
   const [backHref, setBackHref] = useState("/");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [addr, setAddr] = useState("");
+  const [ref, setRef] = useState("");
+  const [pay, setPay] = useState<"pix" | "dinheiro" | "cartao_entrega">("pix");
+  const [troco, setTroco] = useState("");
+  const [sending, setSending] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     const from = new URLSearchParams(window.location.search).get("from");
     setBackHref(safeFrom(from));
   }, []);
 
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [addr, setAddr] = useState("");
-  const [ref, setRef] = useState("");
-
-  const [pay, setPay] = useState<"pix" | "dinheiro" | "cartao_entrega">("pix");
-  const [troco, setTroco] = useState("");
-
   const deliveryFee = useMemo(
     () => (cart.state.deliveryType === "entrega" ? 6 : 0),
     [cart.state.deliveryType]
   );
+
   const total = useMemo(
     () => cart.subtotal + deliveryFee,
     [cart.subtotal, deliveryFee]
   );
 
+  const trocoNum = useMemo(() => num(String(troco).replace(",", ".")), [troco]);
+
   const canSubmit = useMemo(() => {
     if (!cart.itemsCount) return false;
     if (!name.trim() || !phone.trim()) return false;
     if (cart.state.deliveryType === "entrega" && !addr.trim()) return false;
-    if (
-      pay === "dinheiro" &&
-      troco.trim() &&
-      Number(troco.replace(",", ".")) < total
-    )
-      return false;
+    if (pay === "dinheiro" && troco.trim() && trocoNum < total) return false;
+    if (sending) return false;
     return true;
   }, [
     cart.itemsCount,
@@ -316,49 +318,104 @@ export default function CheckoutPage() {
     addr,
     pay,
     troco,
+    trocoNum,
     total,
+    sending,
     cart.state.deliveryType,
   ]);
 
-  function submit() {
+  async function submit() {
     if (!canSubmit) return;
 
-    const payload = {
-      storeId: cart.state.storeId,
-      items: cart.state.items,
-      deliveryType: cart.state.deliveryType,
-      note: cart.state.note,
-      customer: {
-        name,
-        phone,
-        addr: cart.state.deliveryType === "entrega" ? addr : "",
-        ref,
-      },
-      payment: {
-        method: pay,
-        changeFor: pay === "dinheiro" ? troco : "",
-      },
-      pricing: { subtotal: cart.subtotal, deliveryFee, total },
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      setSending(true);
+      setSubmitError("");
 
-    console.log("CHECKOUT_PAYLOAD", payload);
+      const itens = (cart.state.items || []).map((item: any) => ({
+        nome:
+          item?.name ||
+          item?.nome ||
+          item?.title ||
+          item?.produto_nome ||
+          "Item",
+        quantidade: num(item?.qty ?? item?.quantidade ?? 1, 1),
+        preco: num(item?.price ?? item?.preco ?? item?.unitPrice ?? 0, 0),
+      }));
 
-    cart.clear();
-    window.location.href = "/valefood/success";
+      const paymentMethod =
+        pay === "pix"
+          ? "PIX"
+          : pay === "dinheiro"
+          ? "DINHEIRO"
+          : "CARTÃO NA ENTREGA";
+
+      const serviceType =
+        cart.state.deliveryType === "entrega" ? "ENTREGA" : "RETIRADA";
+
+      const observacoes = [cart.state.note, ref.trim()].filter(Boolean).join(" | ");
+
+      const payload = {
+        customer_name: name.trim(),
+        customer_phone: phone.trim(),
+        endereco: cart.state.deliveryType === "entrega" ? addr.trim() : "",
+        service_type: serviceType,
+        payment_method: paymentMethod,
+        troco: pay === "dinheiro" && troco.trim() ? trocoNum : 0,
+        r_inicial: cart.subtotal,
+        taxa_entrega: deliveryFee,
+        total,
+        platform: "ValeFood",
+        responsavel: null,
+        status: "EM PRODUÇÃO",
+        observacoes,
+        created_at: new Date().toISOString(),
+        itens,
+      };
+
+      console.log("ENVIANDO PEDIDO", payload);
+
+      const res = await fetch("http://localhost:3001/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const rawText = await res.text();
+      console.log("STATUS", res.status);
+      console.log("BODY", rawText);
+
+      let data: any = null;
+      try {
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        data = null;
+      }
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Não foi possível finalizar o pedido.");
+      }
+
+      cart.clear();
+      window.location.href = "/valefood/success";
+    } catch (err: any) {
+      setSubmitError(err?.message || "Erro ao finalizar pedido.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
     <div
       className="min-h-screen px-3 py-4"
       style={{
-        paddingTop: "env(safe-area-inset-top)", // ✅ pega notch/top safe area
+        paddingTop: "env(safe-area-inset-top)",
         background:
           "radial-gradient(1200px 700px at 50% -10%, rgba(71,193,224,0.20) 0%, rgba(0,0,0,0) 55%), linear-gradient(180deg, #f7fbff 0%, #eef6fb 100%)",
       }}
     >
       <div className="mx-auto w-full max-w-[520px]">
-        {/* top */}
         <div className="mb-3 flex items-center justify-between px-1">
           <a
             href={backHref}
@@ -375,15 +432,11 @@ export default function CheckoutPage() {
           </a>
 
           <div className="text-right leading-tight">
-            <div className="text-[16px] font-extrabold" style={{ color: BRAND }}>
-              {/* sem texto */}
-            </div>
+            <div className="text-[16px] font-extrabold" style={{ color: BRAND }} />
             <div
               className="text-[12px] font-semibold"
               style={{ color: BRAND, opacity: 0.55 }}
-            >
-              {/* sem texto */}
-            </div>
+            />
           </div>
         </div>
 
@@ -398,7 +451,6 @@ export default function CheckoutPage() {
           </div>
         ) : (
           <div className="rounded-[28px] p-4" style={sheetGlass}>
-            {/* header like cart */}
             <div className="mb-3 flex items-center justify-between">
               <div className="leading-tight">
                 <div className="text-[15px] font-extrabold" style={{ color: BRAND }}>
@@ -427,7 +479,6 @@ export default function CheckoutPage() {
             </div>
 
             <div className="grid gap-3">
-              {/* cliente */}
               <div className="rounded-2xl p-3" style={itemGlass}>
                 <div className="mb-2 text-[13px] font-extrabold" style={{ color: BRAND }}>
                   Dados do cliente
@@ -469,7 +520,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* pagamento */}
               <div className="rounded-2xl p-3" style={itemGlass}>
                 <div className="mb-2 text-[13px] font-extrabold" style={{ color: BRAND }}>
                   Pagamento
@@ -507,12 +557,19 @@ export default function CheckoutPage() {
                         placeholder="Ex: 100"
                         type="text"
                       />
+                      {troco.trim() && trocoNum < total ? (
+                        <div
+                          className="mt-2 text-[12px] font-semibold"
+                          style={{ color: "#b42318" }}
+                        >
+                          O troco precisa ser maior ou igual ao total.
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
               </div>
 
-              {/* resumo */}
               <div className="rounded-2xl p-3" style={itemGlass}>
                 <div className="mb-2 text-[13px] font-extrabold" style={{ color: BRAND }}>
                   Resumo
@@ -541,26 +598,37 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* footer like cart */}
             <div
               className="mt-4 border-t px-1 pt-3 pb-8"
-              style={{
-                borderColor: "rgba(1,27,60,0.10)",
-              }}
+              style={{ borderColor: "rgba(1,27,60,0.10)" }}
             >
+              {!!submitError && (
+                <div
+                  className="mb-3 rounded-2xl px-4 py-3 text-[12px] font-semibold"
+                  style={{
+                    background: "rgba(180, 35, 24, 0.08)",
+                    border: "1px solid rgba(180, 35, 24, 0.16)",
+                    color: "#b42318",
+                  }}
+                >
+                  {submitError}
+                </div>
+              )}
+
               <button
                 onClick={submit}
                 disabled={!canSubmit}
-                className="w-full rounded-2xl px-4 py-3 text-[14px] font-extrabold tracking-wide active:scale-[0.99] disabled:opacity-100"
+                className="w-full rounded-2xl px-4 py-3 text-[14px] font-extrabold tracking-wide active:scale-[0.99] disabled:cursor-not-allowed"
                 style={{
                   background:
                     "linear-gradient(180deg, rgba(71,193,224,0.92) 0%, rgba(71,193,224,0.70) 100%)",
                   color: BRAND,
                   boxShadow:
                     "0 18px 40px rgba(71,193,224,0.18), 0 0 0 1px rgba(255,255,255,0.40) inset",
+                  opacity: canSubmit ? 1 : 0.55,
                 }}
               >
-                Finalizar pedido
+                {sending ? "Enviando pedido..." : "Finalizar pedido"}
               </button>
 
               <a
@@ -580,9 +648,7 @@ export default function CheckoutPage() {
               <div
                 className="mt-2 text-center text-[11px] font-semibold"
                 style={{ color: BRAND, opacity: 0.45 }}
-              >
-                {/* sem texto */}
-              </div>
+              />
             </div>
           </div>
         )}

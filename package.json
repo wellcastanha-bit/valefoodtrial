@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.98.0",
     "browserslist": "^4.28.1",
     "caniuse-lite": "^1.0.30001774",
     "lucide-react": "^0.575.0",
