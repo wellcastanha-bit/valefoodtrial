@@ -21,6 +21,7 @@ const ORANGE = "#f59e0b";
 const TEXT = "#111827";
 const MUTED = "#6b7280";
 const LINE = "#e5e7eb";
+const STORE_ID = "pizzablu";
 
 function cn(...a: Array<string | false | null | undefined>) {
   return a.filter(Boolean).join(" ");
@@ -96,6 +97,16 @@ export default function LojaPage() {
   const router = useRouter();
   const cart = useCart();
 
+  useEffect(() => {
+    if (cart.state.items.length > 0 && cart.state.storeId && cart.state.storeId !== STORE_ID) {
+      cart.clear();
+      cart.setStoreId(STORE_ID);
+    } else if (!cart.state.storeId) {
+      cart.setStoreId(STORE_ID);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const pizzas = useMemo(() => CARDAPIO.pizza.items, []);
   const bebidas = useMemo(() => CARDAPIO.bebidas.items, []);
   const porcoes = useMemo(() => CARDAPIO.porcoes.items, []);
@@ -111,15 +122,12 @@ export default function LojaPage() {
 
   const [active, setActive] = useState<TabKey>("pizza");
 
-  // ✅ SEARCH
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  // refs por item (pra scroll direto no item)
   const itemEls = useRef<Record<string, HTMLElement | null>>({});
 
-  // ✅ offset REAL (topbar + tabs sticky)
   const [scrollOffset, setScrollOffset] = useState(0);
   useEffect(() => {
     function recalc() {
@@ -148,9 +156,7 @@ export default function LojaPage() {
     const el = getRef(k).current;
     if (!el) return;
 
-    // ✅ antes era negativo e “empurrava” a seção pra baixo
     const EXTRA_GAP = 12;
-
     const top = el.getBoundingClientRect().top + window.scrollY - (scrollOffset + EXTRA_GAP);
     window.scrollTo({ top, behavior: "smooth" });
   }
@@ -181,7 +187,6 @@ export default function LojaPage() {
       .slice(0, 12);
   }, [q, allItems]);
 
-  // ✅ underline acompanha o scroll via IntersectionObserver
   useEffect(() => {
     const sections: Array<{ key: TabKey; el: HTMLElement | null }> = [
       { key: "pizza", el: pizzaRef.current },
@@ -214,7 +219,6 @@ export default function LojaPage() {
     return () => obs.disconnect();
   }, [scrollOffset]);
 
-  // ✅ Pizza Builder
   const [pizzaOpen, setPizzaOpen] = useState(false);
   const [pizzaBase, setPizzaBase] = useState<any>(null);
 
@@ -229,12 +233,17 @@ export default function LojaPage() {
       return;
     }
 
-    cart.addItem({ id: it.id, name: it.title, price: it.priceNum, image: it.img });
+    cart.addItem({
+      id: it.id,
+      name: it.title,
+      price: it.priceNum,
+      image: it.img,
+      storeId: STORE_ID,
+    });
   }
 
   return (
     <div className="min-h-screen w-full bg-white overflow-x-hidden">
-      {/* TOPBAR (sticky) */}
       <div
         ref={topbarRef}
         className="sticky top-0 z-50 w-full"
@@ -282,7 +291,6 @@ export default function LojaPage() {
             </div>
           </div>
 
-          {/* SEARCH BAR */}
           {searchOpen && (
             <div className="px-4 pb-3">
               <div
@@ -360,9 +368,7 @@ export default function LojaPage() {
         </div>
       </div>
 
-      {/* CONTENT */}
       <div className="mx-auto w-full max-w-[600px] bg-white">
-        {/* Header */}
         <div className="px-4 pt-8">
           <div className="flex items-start gap-4">
             <div className="relative -mt-4 shrink-0">
@@ -370,7 +376,6 @@ export default function LojaPage() {
                 className="flex items-center justify-center overflow-hidden rounded-2xl"
                 style={{ width: 75, height: 75, background: BRAND }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo-pizzablu.png" alt="Pizza Blu" className="h-full w-full object-cover" />
               </div>
             </div>
@@ -400,7 +405,6 @@ export default function LojaPage() {
           </div>
         </div>
 
-        {/* Carousel */}
         <div className="mt-6">
           <div className="flex w-full" style={{ background: LINE, gap: "1px" }}>
             <PromoCardExpanded img="https://images.unsplash.com/photo-1601924582970-9238bcb495d9?auto=format&fit=crop&w=900&q=80" />
@@ -409,7 +413,6 @@ export default function LojaPage() {
           </div>
         </div>
 
-        {/* TABS */}
         <div
           ref={tabsBarRef}
           className="sticky z-40 mt-3 top-[calc(env(safe-area-inset-top)+64px)] bg-white border-b"
@@ -435,7 +438,6 @@ export default function LojaPage() {
           </div>
         </div>
 
-        {/* SEÇÕES */}
         <div className="px-0">
           <div ref={pizzaRef}>
             <Section
@@ -471,7 +473,6 @@ export default function LojaPage() {
         <div className="h-10" />
       </div>
 
-      {/* ✅ Pizza Builder modal */}
       <PizzaBuilder
         open={pizzaOpen}
         baseItem={pizzaBase}
@@ -485,6 +486,8 @@ export default function LojaPage() {
             name: p.name,
             price: p.price,
             image: p.image,
+            meta: p.meta,
+            storeId: STORE_ID,
           });
           setPizzaOpen(false);
           setPizzaBase(null);
@@ -492,10 +495,8 @@ export default function LojaPage() {
         }}
       />
 
-      {/* ✅ Carrinho (sheet) */}
       <PainelCarrinho checkoutHref="/checkout" />
 
-      {/* ✅ Barra fixa de compra */}
       <div
         className="fixed left-0 right-0 z-[60] border-t"
         style={{
@@ -575,12 +576,6 @@ function PromoCardExpanded({ img }: { img: string }) {
   );
 }
 
-/**
- * ✅ AJUSTE DE ESPAÇAMENTO (MOBILE):
- * - header da seção menor no mobile (pt-4)
- * - item com padding mais consistente (py-3)
- * - separador colado e sem “respiro” extra (dentro do botão e só entre itens)
- */
 function Section({
   title,
   lineColor,
@@ -641,7 +636,6 @@ function Section({
                 </div>
               </div>
 
-              {/* ✅ separador colado: só entre itens */}
               {idx !== items.length - 1 && <div className="h-[1px] w-full" style={{ background: lineColor }} />}
             </button>
           </div>

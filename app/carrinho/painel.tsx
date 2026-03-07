@@ -280,149 +280,152 @@ export default function PainelCarrinho({
 
                 return (
                   <div
-                    key={it.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl p-3"
-                    style={itemGlass}
-                  >
-                    <div className="min-w-0">
-                      {/* ✅ TÍTULO EM NEGRITO (como no print) */}
-                      <div className="truncate text-[14px] font-extrabold" style={{ color: BRAND }}>
-                        {isPizza ? pizzaTitle : it.name}
-                      </div>
+  key={it.id}
+  className="flex items-center justify-between gap-3 rounded-2xl p-3"
+  style={itemGlass}
+>
+  <div className="min-w-0 flex-1">
+    {/* ✅ TÍTULO + PREÇO NA MESMA LINHA */}
+    <div className="flex items-start justify-between gap-3">
+      <div className="truncate text-[14px] font-extrabold" style={{ color: BRAND }}>
+        {isPizza ? pizzaTitle : it.name}
+      </div>
 
-                      {/* ✅ Sabores em linhas com " - " (sem sobrescrever) */}
-                      {isPizza && sabores.length > 0 && (
-                        <div className="mt-1 space-y-0.5 text-[12px] font-semibold" style={{ color: BRAND, opacity: 0.78 }}>
-                          {sabores.map((s, idx) => (
-                            <div key={`${it.id}_s_${idx}`} className="truncate">
-                              {" - "} {s}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* ✅ Borda: (negrito) + valor embaixo (SEM " - ") */}
-                      {isPizza && (
-                        <div className="mt-2">
-                          <div className="text-[12px] font-extrabold" style={{ color: BRAND, opacity: 0.9 }}>
-                            Borda:
-                          </div>
-                          <div className="text-[12px] font-semibold" style={{ color: BRAND, opacity: 0.78 }}>
-                            {borda}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* preço embaixo (mantém como está) */}
-                      <div className="mt-1 text-[12px]" style={{ color: BRAND, opacity: 0.7 }}>
-                        {brl(it.price)}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => cart.decItem(it.id)}
-                        className="grid h-9 w-9 place-items-center rounded-xl active:scale-[0.98]"
-                        style={chipGlass}
-                        aria-label="Diminuir"
-                      >
-                        <Icon name="minus" className="h-4 w-4 text-[#47c1e0]" />
-                      </button>
-
-                      <div className="min-w-[28px] text-center text-[14px] font-semibold" style={{ color: BRAND }}>
-                        {it.qty}
-                      </div>
-
-                      <button
-                        onClick={() =>
-                          cart.addItem({
-                            id: it.id,
-                            name: it.name,
-                            price: it.price,
-                            image: it.image,
-                          })
-                        }
-                        className="grid h-9 w-9 place-items-center rounded-xl active:scale-[0.98]"
-                        style={{
-                          ...chipGlass,
-                          background: "linear-gradient(180deg, rgba(71,193,224,0.26) 0%, rgba(71,193,224,0.14) 100%)",
-                          border: "1px solid rgba(71,193,224,0.35)",
-                        }}
-                        aria-label="Aumentar"
-                      >
-                        <Icon name="plus" className="h-4 w-4 text-[#47c1e0]" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* observação */}
-          <div className="mt-3 rounded-2xl p-3" style={itemGlass}>
-            <div className="text-[12px] font-semibold" style={{ color: BRAND, opacity: 0.75 }}>
-              Observação
-            </div>
-
-            <textarea
-              value={cart.state.note}
-              onChange={(e) => cart.setNote(e.target.value)}
-              rows={2}
-              placeholder="Ex: sem cebola, ponto da carne, mandar cupom fiscal..."
-              className="mt-2 w-full resize-none rounded-xl border px-3 py-2 text-[13px] outline-none"
-              style={{
-                background: "rgba(255,255,255,0.24)",
-                borderColor: "rgba(1,27,60,0.12)",
-                color: BRAND,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* footer */}
-        <div className="sticky bottom-0 px-4 pt-3 pb-10" style={footerGlass}>
-          <div className="mb-2 flex items-center justify-between text-[13px]" style={{ color: BRAND, opacity: 0.75 }}>
-            <span>Subtotal</span>
-            <span className="font-semibold" style={{ color: BRAND, opacity: 1 }}>
-              {brl(cart.subtotal)}
-            </span>
-          </div>
-
-          <a
-            href={canGoCheckout ? checkoutWithFrom : "#"}
-            onClick={(e) => {
-              if (!canGoCheckout) e.preventDefault();
-              else cart.close();
-            }}
-            className={cn(
-              "block w-full rounded-2xl px-4 py-3 text-center text-[14px] font-extrabold tracking-wide transition active:scale-[0.99]",
-              canGoCheckout ? "" : "pointer-events-none opacity-50"
-            )}
-            style={{
-              background: "linear-gradient(180deg, rgba(71,193,224,0.92) 0%, rgba(71,193,224,0.70) 100%)",
-              color: BRAND,
-              boxShadow: "0 18px 40px rgba(71,193,224,0.18), 0 0 0 1px rgba(255,255,255,0.40) inset",
-            }}
-          >
-            Finalizar compra
-          </a>
-
-          <button
-            onClick={cart.close}
-            className="mt-2 w-full rounded-2xl border px-4 py-2 text-[12px] font-semibold active:scale-[0.99]"
-            style={{
-              background: "rgba(255,255,255,0.25)",
-              border: "1px solid rgba(255,255,255,0.40)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              color: BRAND,
-            }}
-          >
-            Continuar comprando
-          </button>
-        </div>
+      <div
+        className="shrink-0 text-[14px] font-extrabold whitespace-nowrap"
+        style={{ color: BRAND }}
+      >
+        {brl(it.price)}
       </div>
     </div>
-  );
+
+    {/* ✅ Sabores em linhas com " - " */}
+    {isPizza && sabores.length > 0 && (
+      <div className="mt-1 space-y-0.5 text-[12px] font-semibold" style={{ color: BRAND, opacity: 0.78 }}>
+        {sabores.map((s, idx) => (
+          <div key={`${it.id}_s_${idx}`} className="truncate">
+            - {s}
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* ✅ Borda inline */}
+    {isPizza && (
+      <div className="mt-2 text-[12px] font-semibold" style={{ color: BRAND, opacity: 0.78 }}>
+        <span className="font-extrabold" style={{ color: BRAND, opacity: 0.9 }}>
+          Borda:
+        </span>{" "}
+        {borda}
+      </div>
+    )}
+  </div>
+
+  <div className="flex items-center gap-2">
+    <button
+      onClick={() => cart.decItem(it.id)}
+      className="grid h-9 w-9 place-items-center rounded-xl active:scale-[0.98]"
+      style={chipGlass}
+      aria-label="Diminuir"
+    >
+      <Icon name="minus" className="h-4 w-4 text-[#47c1e0]" />
+    </button>
+
+    <div className="min-w-[28px] text-center text-[14px] font-semibold" style={{ color: BRAND }}>
+      {it.qty}
+    </div>
+
+    <button
+      onClick={() =>
+        cart.addItem({
+          id: it.id,
+          name: it.name,
+          price: it.price,
+          image: it.image,
+          meta: it.meta,
+        })
+      }
+      className="grid h-9 w-9 place-items-center rounded-xl active:scale-[0.98]"
+      style={{
+        ...chipGlass,
+        background: "linear-gradient(180deg, rgba(71,193,224,0.26) 0%, rgba(71,193,224,0.14) 100%)",
+        border: "1px solid rgba(71,193,224,0.35)",
+      }}
+      aria-label="Aumentar"
+    >
+      <Icon name="plus" className="h-4 w-4 text-[#47c1e0]" />
+    </button>
+  </div>
+</div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* observação */}
+        <div className="mt-3 rounded-2xl p-3" style={itemGlass}>
+          <div className="text-[12px] font-semibold" style={{ color: BRAND, opacity: 0.75 }}>
+            Observação
+          </div>
+
+          <textarea
+            value={cart.state.note}
+            onChange={(e) => cart.setNote(e.target.value)}
+            rows={2}
+            placeholder="Ex: sem cebola, ponto da carne, mandar cupom fiscal..."
+            className="mt-2 w-full resize-none rounded-xl border px-3 py-2 text-[13px] outline-none"
+            style={{
+              background: "rgba(255,255,255,0.24)",
+              borderColor: "rgba(1,27,60,0.12)",
+              color: BRAND,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* footer */}
+      <div className="sticky bottom-0 px-4 pt-3 pb-10" style={footerGlass}>
+        <div className="mb-2 flex items-center justify-between text-[13px]" style={{ color: BRAND, opacity: 0.75 }}>
+          <span>Subtotal</span>
+          <span className="font-semibold" style={{ color: BRAND, opacity: 1 }}>
+            {brl(cart.subtotal)}
+          </span>
+        </div>
+
+        <a
+          href={canGoCheckout ? checkoutWithFrom : "#"}
+          onClick={(e) => {
+            if (!canGoCheckout) e.preventDefault();
+            else cart.close();
+          }}
+          className={cn(
+            "block w-full rounded-2xl px-4 py-3 text-center text-[14px] font-extrabold tracking-wide transition active:scale-[0.99]",
+            canGoCheckout ? "" : "pointer-events-none opacity-50"
+          )}
+          style={{
+            background: "linear-gradient(180deg, rgba(71,193,224,0.92) 0%, rgba(71,193,224,0.70) 100%)",
+            color: BRAND,
+            boxShadow: "0 18px 40px rgba(71,193,224,0.18), 0 0 0 1px rgba(255,255,255,0.40) inset",
+          }}
+        >
+          Finalizar compra
+        </a>
+
+        <button
+          onClick={cart.close}
+          className="mt-2 w-full rounded-2xl border px-4 py-2 text-[12px] font-semibold active:scale-[0.99]"
+          style={{
+            background: "rgba(255,255,255,0.25)",
+            border: "1px solid rgba(255,255,255,0.40)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            color: BRAND,
+          }}
+        >
+          Continuar comprando
+        </button>
+      </div>
+    </div>
+  </div>
+);
 }

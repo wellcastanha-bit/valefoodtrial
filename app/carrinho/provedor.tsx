@@ -10,6 +10,14 @@ export type CartItem = {
   price: number; // em reais (ex: 39.9)
   qty: number;
   image?: string;
+  meta?: {
+    tamanhoId?: "pequena" | "grande" | "familia";
+    mode?: "salgada" | "doce";
+    sabores?: string[];
+    premium?: boolean;
+    borda?: string;
+    obs?: string;
+  };
 };
 
 export type CartState = {
@@ -34,7 +42,24 @@ export type CartApi = {
   setDeliveryType: (t: DeliveryType) => void;
   setNote: (v: string) => void;
 
-  addItem: (item: { id: string; name: string; price: number; image?: string }, opts?: { qty?: number }) => void;
+  addItem: (
+    item: {
+      id: string;
+      name: string;
+      price: number;
+      image?: string;
+      storeId?: string | null;
+      meta?: {
+        tamanhoId?: "pequena" | "grande" | "familia";
+        mode?: "salgada" | "doce";
+        sabores?: string[];
+        premium?: boolean;
+        borda?: string;
+        obs?: string;
+      };
+    },
+    opts?: { qty?: number }
+  ) => void;
   decItem: (id: string) => void;
   removeItem: (id: string) => void;
   clear: () => void;
@@ -81,6 +106,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               price: money2(Number(it.price) || 0),
               qty: clampInt(Number(it.qty) || 0, 0, 999),
               image: it.image ? String(it.image) : undefined,
+              meta:
+                it.meta && typeof it.meta === "object"
+                  ? {
+                      tamanhoId:
+                        it.meta.tamanhoId === "pequena" ||
+                        it.meta.tamanhoId === "grande" ||
+                        it.meta.tamanhoId === "familia"
+                          ? it.meta.tamanhoId
+                          : undefined,
+                      mode:
+                        it.meta.mode === "doce"
+                          ? "doce"
+                          : it.meta.mode === "salgada"
+                            ? "salgada"
+                            : undefined,
+                      sabores: Array.isArray(it.meta.sabores)
+                        ? it.meta.sabores.filter((x: unknown) => typeof x === "string")
+                        : undefined,
+                      premium: !!it.meta.premium,
+                      borda: typeof it.meta.borda === "string" ? it.meta.borda : undefined,
+                      obs: typeof it.meta.obs === "string" ? it.meta.obs : undefined,
+                    }
+                  : undefined,
             })),
             deliveryType: parsed.deliveryType === "retirada" ? "retirada" : "entrega",
             note: String(parsed.note || ""),
@@ -129,15 +177,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const addQty = clampInt(opts?.qty ?? 1, 1, 999);
 
         setState((s) => {
+          const incomingStoreId = item.storeId ?? null;
+
+          // trava mistura de lojas
+          if (s.storeId && incomingStoreId && s.storeId !== incomingStoreId) {
+            return s;
+          }
+
+          const nextStoreId = s.storeId ?? incomingStoreId;
+
           const idx = s.items.findIndex((x) => x.id === item.id);
           if (idx >= 0) {
             const next = [...s.items];
             const cur = next[idx];
-            next[idx] = { ...cur, qty: clampInt(cur.qty + addQty, 1, 999) };
-            return { ...s, items: next };
+            next[idx] = {
+              ...cur,
+              qty: clampInt(cur.qty + addQty, 1, 999),
+              meta: item.meta ?? cur.meta,
+            };
+            return { ...s, storeId: nextStoreId, items: next };
           }
+
           return {
             ...s,
+            storeId: nextStoreId,
             items: [
               ...s.items,
               {
@@ -146,12 +209,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 price: money2(item.price),
                 qty: addQty,
                 image: item.image,
+                meta: item.meta,
               },
             ],
           };
         });
-
-        
       },
 
       decItem: (id) => {

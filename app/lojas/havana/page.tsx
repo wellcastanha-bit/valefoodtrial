@@ -16,7 +16,6 @@ import {
   BRAND,
 } from "./components/cardapio";
 
-// ✅ novo builder (hamburgueria)
 import BurgerBuilder, {
   type BurgerBaseItem,
   type AddonGroup,
@@ -26,6 +25,7 @@ const ORANGE = "#f59e0b";
 const TEXT = "#111827";
 const MUTED = "#6b7280";
 const LINE = "#e5e7eb";
+const STORE_ID = "havana";
 
 function cn(...a: Array<string | false | null | undefined>) {
   return a.filter(Boolean).join(" ");
@@ -101,7 +101,16 @@ export default function LojaPage() {
   const router = useRouter();
   const cart = useCart();
 
-  // ✅ agora as abas são da hamburgueria
+  useEffect(() => {
+    if (cart.state.items.length > 0 && cart.state.storeId && cart.state.storeId !== STORE_ID) {
+      cart.clear();
+      cart.setStoreId(STORE_ID);
+    } else if (!cart.state.storeId) {
+      cart.setStoreId(STORE_ID);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const hamburgers = useMemo(() => CARDAPIO.hamburgers.items, []);
   const porcoes = useMemo(() => CARDAPIO.porcoes.items, []);
   const bebidas = useMemo(() => CARDAPIO.bebidas.items, []);
@@ -121,15 +130,12 @@ export default function LojaPage() {
 
   const [active, setActive] = useState<TabKey>("hamburgers");
 
-  // ✅ SEARCH
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  // refs por item (pra scroll direto no item)
   const itemEls = useRef<Record<string, HTMLElement | null>>({});
 
-  // ✅ offset REAL (topbar + tabs sticky)
   const [scrollOffset, setScrollOffset] = useState(0);
   useEffect(() => {
     function recalc() {
@@ -191,7 +197,6 @@ export default function LojaPage() {
       .slice(0, 12);
   }, [q, allItems]);
 
-  // ✅ underline acompanha o scroll via IntersectionObserver
   useEffect(() => {
     const sections: Array<{ key: TabKey; el: HTMLElement | null }> = [
       { key: "hamburgers", el: hamburgersRef.current },
@@ -226,7 +231,6 @@ export default function LojaPage() {
     return () => obs.disconnect();
   }, [scrollOffset]);
 
-  // ✅ Burger Builder modal (regras do anota: grupo "turbinados" maxTotal 6; maxEach 6)
   const [burgerOpen, setBurgerOpen] = useState(false);
   const [burgerBase, setBurgerBase] = useState<BurgerBaseItem | null>(null);
 
@@ -251,7 +255,6 @@ export default function LojaPage() {
   );
 
   function addToCart(it: Item) {
-    // ✅ abre builder somente para hamburgers
     if (it.section === "hamburgers") {
       setBurgerBase({
         id: it.id,
@@ -264,12 +267,17 @@ export default function LojaPage() {
       return;
     }
 
-    cart.addItem({ id: it.id, name: it.title, price: it.priceNum, image: it.img });
+    cart.addItem({
+      id: it.id,
+      name: it.title,
+      price: it.priceNum,
+      image: it.img,
+      storeId: STORE_ID,
+    });
   }
 
   return (
     <div className="min-h-screen w-full bg-white overflow-x-hidden">
-      {/* TOPBAR (sticky) */}
       <div
         ref={topbarRef}
         className="sticky top-0 z-50 w-full"
@@ -286,7 +294,6 @@ export default function LojaPage() {
               <Icon name="back" className="h-6 w-6 text-white" />
             </button>
 
-            {/* ✅ nome da loja */}
             <div className="text-[22px] sm:text-[25px] font-bold tracking-[-0.02em] text-white">
               Havana Hamburgueria
             </div>
@@ -320,7 +327,6 @@ export default function LojaPage() {
             </div>
           </div>
 
-          {/* SEARCH BAR */}
           {searchOpen && (
             <div className="px-4 pb-3">
               <div
@@ -398,9 +404,7 @@ export default function LojaPage() {
         </div>
       </div>
 
-      {/* CONTENT */}
       <div className="mx-auto w-full max-w-[600px] bg-white">
-        {/* Header (mantém layout — só muda infos) */}
         <div className="px-4 pt-8">
           <div className="flex items-start gap-4">
             <div className="relative -mt-4 shrink-0">
@@ -408,8 +412,6 @@ export default function LojaPage() {
                 className="flex items-center justify-center overflow-hidden rounded-2xl"
                 style={{ width: 75, height: 75, background: BRAND }}
               >
-                {/* ajuste o arquivo conforme seu public/ */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/havana/logo-havana.jpg" alt="Havana" className="h-full w-full object-cover" />
               </div>
             </div>
@@ -439,16 +441,14 @@ export default function LojaPage() {
           </div>
         </div>
 
- {/* Carousel (mantém layout) */}
-<div className="mt-6">
-  <div className="flex w-full" style={{ background: LINE, gap: "1px" }}>
-    <PromoCardExpanded img="/havana/havana-fire.webp" />
-    <PromoCardExpanded img="/havana/havana-piupiu.webp" />
-    <PromoCardExpanded img="/havana/havana-monstrao.webp" />
-  </div>
-</div>
+        <div className="mt-6">
+          <div className="flex w-full" style={{ background: LINE, gap: "1px" }}>
+            <PromoCardExpanded img="/havana/havana-fire.webp" />
+            <PromoCardExpanded img="/havana/havana-piupiu.webp" />
+            <PromoCardExpanded img="/havana/havana-monstrao.webp" />
+          </div>
+        </div>
 
-        {/* TABS */}
         <div
           ref={tabsBarRef}
           className="sticky z-40 mt-3 top-[calc(env(safe-area-inset-top)+64px)] bg-white border-b"
@@ -474,7 +474,6 @@ export default function LojaPage() {
           </div>
         </div>
 
-        {/* SEÇÕES */}
         <div className="px-0">
           <div ref={hamburgersRef}>
             <Section
@@ -530,7 +529,6 @@ export default function LojaPage() {
         <div className="h-10" />
       </div>
 
-      {/* ✅ Burger Builder modal */}
       <BurgerBuilder
         open={burgerOpen}
         baseItem={burgerBase}
@@ -545,6 +543,8 @@ export default function LojaPage() {
             name: p.name,
             price: p.price,
             image: p.image,
+            meta: p.meta,
+            storeId: STORE_ID,
           });
           setBurgerOpen(false);
           setBurgerBase(null);
@@ -552,10 +552,8 @@ export default function LojaPage() {
         }}
       />
 
-      {/* ✅ Carrinho (sheet) */}
       <PainelCarrinho checkoutHref="/checkout" />
 
-      {/* ✅ Barra fixa de compra */}
       <div
         className="fixed left-0 right-0 z-[60] border-t"
         style={{
@@ -630,16 +628,11 @@ function RatingBlock({ rating, total }: { rating: string; total: string }) {
 function PromoCardExpanded({ img }: { img: string }) {
   return (
     <div className="relative w-1/3 aspect-[3/4] overflow-hidden bg-gray-100">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={img} alt="" className="h-full w-full object-cover" />
     </div>
   );
 }
 
-/**
- * ✅ NÃO ALTERADO: layout da seção
- * (somente reutilizado)
- */
 function Section({
   title,
   lineColor,
@@ -703,7 +696,6 @@ function Section({
 
                 <div className="shrink-0">
                   <div className="h-[96px] w-[96px] sm:h-[112px] sm:w-[120px] overflow-hidden rounded-2xl bg-gray-100 grid place-items-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     {c.img ? (
                       <img
                         src={c.img}
@@ -718,7 +710,6 @@ function Section({
                 </div>
               </div>
 
-              {/* ✅ separador colado: só entre itens */}
               {idx !== items.length - 1 && (
                 <div className="h-[1px] w-full" style={{ background: lineColor }} />
               )}
