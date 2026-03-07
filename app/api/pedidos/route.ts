@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl) {
+  throw new Error("NEXT_PUBLIC_SUPABASE_URL não configurada");
+}
+
+if (!serviceRoleKey) {
+  throw new Error("SUPABASE_SERVICE_ROLE_KEY não configurada");
+}
+
+const supabase = createClient(supabaseUrl, serviceRoleKey);
 
 function corsHeaders() {
   return {
@@ -14,8 +22,23 @@ function corsHeaders() {
   };
 }
 
+function jsonWithCors(body: any, init?: { status?: number }) {
+  return NextResponse.json(body, {
+    status: init?.status,
+    headers: corsHeaders(),
+  });
+}
+
+function num(v: unknown, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders() });
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders(),
+  });
 }
 
 export async function POST(req: Request) {
@@ -34,40 +57,47 @@ export async function POST(req: Request) {
       total,
       observacoes,
       itens,
-    } = body;
+    } = body ?? {};
+
+    const payloadPedido = {
+      origem: "valefood",
+      cliente_nome: String(cliente_nome ?? "").trim() || null,
+      cliente_telefone: String(cliente_telefone ?? "").trim() || null,
+      endereco: String(endereco ?? "").trim() || null,
+      tipo_entrega: String(tipo_entrega ?? "").trim() || null,
+      forma_pagamento: String(forma_pagamento ?? "").trim() || null,
+      troco_para: troco_para == null || troco_para === "" ? null : num(troco_para),
+      subtotal: num(subtotal),
+      taxa_entrega: num(taxa_entrega),
+      total: num(total),
+      observacoes: String(observacoes ?? "").trim() || null,
+      status: "novo",
+    };
 
     const { data: pedido, error: pedidoError } = await supabase
       .from("pedidos")
-      .insert({
-        origem: "valefood",
-        cliente_nome,
-        cliente_telefone,
-        endereco,
-        tipo_entrega,
-        forma_pagamento,
-        troco_para,
-        subtotal,
-        taxa_entrega,
-        total,
-        observacoes,
-        status: "novo",
-      })
+      .insert(payloadPedido)
       .select("id")
       .single();
 
     if (pedidoError) {
-      return NextResponse.json(
-        { error: pedidoError.message },
-        { status: 500, headers: corsHeaders() }
+      return jsonWithCors(
+        {
+          ok: false,
+          error: pedidoError.message,
+          where: "pedidos.insert",
+          payload: payloadPedido,
+        },
+        { status: 500 }
       );
     }
 
     if (Array.isArray(itens) && itens.length > 0) {
       const itensFormatados = itens.map((item: any) => ({
         pedido_id: pedido.id,
-        nome: item.nome,
-        quantidade: item.quantidade,
-        preco: item.preco,
+        nome: String(item?.nome ?? "Item").trim(),
+        quantidade: num(item?.quantidade, 1),
+        preco: num(item?.preco, 0),
       }));
 
       const { error: itensError } = await supabase
@@ -75,21 +105,30 @@ export async function POST(req: Request) {
         .insert(itensFormatados);
 
       if (itensError) {
-        return NextResponse.json(
-          { error: itensError.message },
-          { status: 500, headers: corsHeaders() }
+        return jsonWithCors(
+          {
+            ok: false,
+            error: itensError.message,
+            where: "pedido_itens.insert",
+            pedido_id: pedido.id,
+            itens: itensFormatados,
+          },
+          { status: 500 }
         );
       }
     }
 
-    return NextResponse.json(
-      { ok: true, pedido_id: pedido.id },
-      { headers: corsHeaders() }
-    );
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Erro ao criar pedido" },
-      { status: 500, headers: corsHeaders() }
+    return jsonWithCors({
+      ok: true,
+      pedido_id: pedido.id,
+    });
+  } catch (error: any) {
+    return jsonWithCors(
+      {
+        ok: false,
+        error: error?.message || "Erro ao criar pedido",
+      },
+      { status: 500 }
     );
   }
 }
