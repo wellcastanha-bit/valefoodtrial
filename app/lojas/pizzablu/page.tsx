@@ -351,27 +351,6 @@ export default function LojaPage() {
 
             <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-2">
               <button
-                onClick={() => cart.open()}
-                className="relative grid h-11 w-11 place-items-center rounded-2xl transition active:scale-[0.96]"
-                style={{ background: "#012642", border: `2px solid ${AQUA}` }}
-                aria-label="Abrir carrinho"
-              >
-                <Icon name="bag" className="h-6 w-6 text-white" />
-                {cart.itemsCount > 0 && (
-                  <span
-                    className="absolute -right-1 -top-1 grid h-6 min-w-[24px] place-items-center rounded-full px-1 text-[12px] font-extrabold"
-                    style={{
-                      background: AQUA,
-                      color: BRAND,
-                      boxShadow: "0 10px 20px rgba(79,220,255,0.25)",
-                    }}
-                  >
-                    {cart.itemsCount}
-                  </span>
-                )}
-              </button>
-
-              <button
                 onClick={() => setSearchOpen((v) => !v)}
                 className="grid h-11 w-11 place-items-center rounded-2xl transition active:scale-[0.96]"
                 style={{ background: "#012642", border: `2px solid ${AQUA}` }}
@@ -590,42 +569,47 @@ export default function LojaPage() {
 
       <PainelCarrinho checkoutHref="/checkout" />
 
-      <div
-        className="fixed left-0 right-0 z-[60] border-t"
-        style={{
-          bottom: "calc(0px + env(safe-area-inset-bottom))",
-          borderColor: "rgba(1,27,60,0.10)",
-          background: "rgba(255,255,255,0.92)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
-        }}
-      >
-        <div className="mx-auto w-full max-w-[600px] px-4 py-6">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-[12px] font-bold text-gray-500">Total</div>
-              <div className="truncate text-[16px] font-extrabold" style={{ color: BRAND }}>
-                {brl(cart.subtotal)}
+      {cart.itemsCount > 0 && (
+        <>
+          <div
+            className="fixed left-0 right-0 z-[60] border-t"
+            style={{
+              bottom: 0,
+              borderColor: "rgba(1,27,60,0.10)",
+              background: "rgba(255,255,255,0.98)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
+          >
+            <div className="mx-auto w-full max-w-[600px] px-4 pt-6 pb-8">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[12px] font-bold text-gray-500">Total</div>
+                  <div className="truncate text-[16px] font-extrabold" style={{ color: BRAND }}>
+                    {brl(cart.subtotal)}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => cart.open()}
+                  className="rounded-2xl px-4 py-3 text-[14px] font-extrabold active:scale-[0.99]"
+                  style={{
+                    background: `linear-gradient(180deg, ${AQUA} 0%, rgba(79,220,255,0.72) 100%)`,
+                    color: BRAND,
+                    boxShadow:
+                      "0 18px 40px rgba(79,220,255,0.18), 0 0 0 1px rgba(255,255,255,0.14) inset",
+                  }}
+                >
+                  Ver carrinho ({cart.itemsCount})
+                </button>
               </div>
             </div>
-
-            <button
-              onClick={() => cart.open()}
-              className="rounded-2xl px-4 py-3 text-[14px] font-extrabold active:scale-[0.99]"
-              style={{
-                background: `linear-gradient(180deg, ${AQUA} 0%, rgba(79,220,255,0.72) 100%)`,
-                color: BRAND,
-                boxShadow:
-                  "0 18px 40px rgba(79,220,255,0.18), 0 0 0 1px rgba(255,255,255,0.14) inset",
-              }}
-            >
-              Ver carrinho ({cart.itemsCount})
-            </button>
           </div>
-        </div>
-      </div>
 
-      <div className="h-[92px]" />
+          <div style={{ height: "calc(150px + env(safe-area-inset-bottom))" }} />
+        </>
+      )}
     </div>
   );
 }
