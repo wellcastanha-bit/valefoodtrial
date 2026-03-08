@@ -746,7 +746,7 @@ export default function PizzaBuilder({
                   <div className="text-[14px] font-semibold" style={{ color: "rgba(1,27,60,0.55)" }}>
                     Subtotal
                   </div>
-                  <div className="truncate text-[18px] font-extrabold" style={{ color: BRAND }}>
+                  <div className="text-[18px] font-bold break-words whitespace-normal leading-tight" style={{ color: BRAND }}>
                     {brlNum(total)}
                   </div>
                 </div>
