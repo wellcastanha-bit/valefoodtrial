@@ -174,6 +174,13 @@ export const CARDAPIO: Record<TabKey, { title: string; items: Item[] }> = {
       { id: "onion_rings", title: "Onion Rings", price: brlStr(24), priceNum: 24, subtitle: "Empanado", icon: "🧅", section: "porcoes" },
       { id: "nuggets", title: "Nuggets", price: brlStr(26), priceNum: 26, subtitle: "10 unidades", icon: "🍗", section: "porcoes" },
       { id: "tiras_frango", title: "Tiras de Frango", price: brlStr(29), priceNum: 29, subtitle: "Empanadas", icon: "🍗", section: "porcoes" },
+
+      { id: "polenta_frita", title: "Polenta Frita", price: brlStr(18), priceNum: 18, subtitle: "Sequinha e crocante", icon: "🟨", section: "porcoes" },
+      { id: "mandioca_frita", title: "Mandioca Frita", price: brlStr(20), priceNum: 20, subtitle: "Dourada e macia", icon: "🥔", section: "porcoes" },
+      { id: "calabresa_acebolada", title: "Calabresa Acebolada", price: brlStr(28), priceNum: 28, subtitle: "Fatiada na chapa", icon: "🥓", section: "porcoes" },
+      { id: "frango_passarinho", title: "Frango a Passarinho", price: brlStr(32), priceNum: 32, subtitle: "Temperado e crocante", icon: "🍗", section: "porcoes" },
+      { id: "file_tilapia", title: "Filé de Tilápia", price: brlStr(36), priceNum: 36, subtitle: "Empanado", icon: "🐟", section: "porcoes" },
+      { id: "mini_pasteis", title: "Mini Pastéis", price: brlStr(27), priceNum: 27, subtitle: "Queijo e carne", icon: "🥟", section: "porcoes" },
     ],
   },
 };

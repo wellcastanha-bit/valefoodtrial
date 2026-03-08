@@ -110,7 +110,6 @@ export default function LojaPage() {
   const pizzas = useMemo(() => CARDAPIO.pizza.items, []);
   const bebidas = useMemo(() => CARDAPIO.bebidas.items, []);
   const porcoes = useMemo(() => CARDAPIO.porcoes.items, []);
-
   const allItems = useMemo(() => ALL_ITEMS, []);
 
   const pizzaRef = useRef<HTMLDivElement | null>(null);
@@ -119,32 +118,66 @@ export default function LojaPage() {
 
   const topbarRef = useRef<HTMLDivElement | null>(null);
   const tabsBarRef = useRef<HTMLDivElement | null>(null);
+  const tabsSentinelRef = useRef<HTMLDivElement | null>(null);
 
   const [active, setActive] = useState<TabKey>("pizza");
-
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-
   const itemEls = useRef<Record<string, HTMLElement | null>>({});
 
+  const [topbarHeight, setTopbarHeight] = useState(64);
+  const [tabsBarHeight, setTabsBarHeight] = useState(56);
   const [scrollOffset, setScrollOffset] = useState(0);
+  const [tabsPinned, setTabsPinned] = useState(false);
+
   useEffect(() => {
     function recalc() {
-      const topH = topbarRef.current?.getBoundingClientRect().height ?? 0;
-      const tabsH = tabsBarRef.current?.getBoundingClientRect().height ?? 0;
+      const topH = Math.round(topbarRef.current?.getBoundingClientRect().height ?? 64);
+      const tabsH = Math.round(tabsBarRef.current?.getBoundingClientRect().height ?? 56);
       const searchH = searchOpen ? 64 : 0;
-      setScrollOffset(Math.round(topH + tabsH + searchH));
+
+      setTopbarHeight(topH);
+      setTabsBarHeight(tabsH);
+      setScrollOffset(topH + tabsH + searchH);
     }
+
     recalc();
     window.addEventListener("resize", recalc);
     return () => window.removeEventListener("resize", recalc);
   }, [searchOpen]);
 
   useEffect(() => {
-    if (searchOpen) requestAnimationFrame(() => searchInputRef.current?.focus());
-    else setQ("");
+    if (searchOpen) {
+      requestAnimationFrame(() => searchInputRef.current?.focus());
+    } else {
+      setQ("");
+    }
   }, [searchOpen]);
+
+  useEffect(() => {
+    function onPinCheck() {
+      if (!tabsSentinelRef.current) return;
+      const rect = tabsSentinelRef.current.getBoundingClientRect();
+      setTabsPinned(rect.top <= topbarHeight);
+    }
+
+    function onMeasure() {
+      const h = Math.round(tabsBarRef.current?.getBoundingClientRect().height ?? 56);
+      setTabsBarHeight(h);
+    }
+
+    onMeasure();
+    onPinCheck();
+
+    window.addEventListener("scroll", onPinCheck, { passive: true });
+    window.addEventListener("resize", onMeasure);
+
+    return () => {
+      window.removeEventListener("scroll", onPinCheck);
+      window.removeEventListener("resize", onMeasure);
+    };
+  }, [topbarHeight]);
 
   function getRef(k: TabKey) {
     if (k === "pizza") return pizzaRef;
@@ -156,29 +189,47 @@ export default function LojaPage() {
     const el = getRef(k).current;
     if (!el) return;
 
+    setActive(k);
+
     const EXTRA_GAP = 12;
-    const top = el.getBoundingClientRect().top + window.scrollY - (scrollOffset + EXTRA_GAP);
-    window.scrollTo({ top, behavior: "smooth" });
+    const top =
+      el.getBoundingClientRect().top +
+      window.scrollY -
+      (topbarHeight + tabsBarHeight + EXTRA_GAP);
+
+    window.scrollTo({
+      top,
+      behavior: "smooth",
+    });
   }
 
   function scrollToItem(itemId: string, section: TabKey) {
     const el = itemEls.current[itemId];
-    if (!el) {
-      scrollToSection(section);
-      return;
-    }
 
+    setActive(section);
     setSearchOpen(false);
+
     requestAnimationFrame(() => {
+      const target = el ?? getRef(section).current;
+      if (!target) return;
+
       const EXTRA_GAP = 12;
-      const top = el.getBoundingClientRect().top + window.scrollY - (scrollOffset + EXTRA_GAP);
-      window.scrollTo({ top, behavior: "smooth" });
+      const top =
+        target.getBoundingClientRect().top +
+        window.scrollY -
+        (topbarHeight + tabsBarHeight + EXTRA_GAP);
+
+      window.scrollTo({
+        top,
+        behavior: "smooth",
+      });
     });
   }
 
   const results = useMemo(() => {
     const nq = norm(q);
     if (!nq) return [];
+
     return allItems
       .filter((it) => {
         const hay = norm(`${it.title} ${it.subtitle ?? ""}`);
@@ -188,36 +239,33 @@ export default function LojaPage() {
   }, [q, allItems]);
 
   useEffect(() => {
-    const sections: Array<{ key: TabKey; el: HTMLElement | null }> = [
-      { key: "pizza", el: pizzaRef.current },
-      { key: "bebidas", el: bebidasRef.current },
-      { key: "porcoes", el: porcoesRef.current },
-    ];
+    function onScroll() {
+      const sections: Array<{ key: TabKey; el: HTMLDivElement | null }> = [
+        { key: "pizza", el: pizzaRef.current },
+        { key: "bebidas", el: bebidasRef.current },
+        { key: "porcoes", el: porcoesRef.current },
+      ];
 
-    const valid = sections.filter((s) => s.el) as Array<{ key: TabKey; el: HTMLElement }>;
-    if (!valid.length) return;
+      const marker = topbarHeight + tabsBarHeight + 24;
 
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => (b.intersectionRatio ?? 0) - (a.intersectionRatio ?? 0))[0];
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const current = sections[i];
+        if (!current.el) continue;
 
-        if (visible) {
-          const key = valid.find((v) => v.el === visible.target)?.key;
-          if (key) setActive(key);
+        const top = current.el.getBoundingClientRect().top + window.scrollY;
+        if (window.scrollY + marker >= top) {
+          setActive(current.key);
+          return;
         }
-      },
-      {
-        root: null,
-        rootMargin: `-${scrollOffset + 12}px 0px -55% 0px`,
-        threshold: [0.12, 0.25, 0.4, 0.6],
       }
-    );
 
-    valid.forEach((v) => obs.observe(v.el));
-    return () => obs.disconnect();
-  }, [scrollOffset]);
+      setActive("pizza");
+    }
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [topbarHeight, tabsBarHeight, scrollOffset]);
 
   const [pizzaOpen, setPizzaOpen] = useState(false);
   const [pizzaBase, setPizzaBase] = useState<any>(null);
@@ -242,8 +290,45 @@ export default function LojaPage() {
     });
   }
 
+  const tabsUi = (
+    <div
+      ref={tabsBarRef}
+      className="border-b bg-white"
+      style={{
+        borderColor: LINE,
+        boxShadow: tabsPinned ? "0 2px 10px rgba(0,0,0,0.06)" : "none",
+      }}
+    >
+      <div className="flex px-4">
+        {TABS.map((t) => {
+          const isActive = t.key === active;
+
+          return (
+            <button
+              key={t.key}
+              onClick={() => scrollToSection(t.key)}
+              className="relative flex-1 py-3 text-center text-[20px] transition-all"
+              style={{
+                color: isActive ? TEXT : MUTED,
+                fontWeight: 900,
+              }}
+            >
+              {t.label}
+              {isActive && (
+                <span
+                  className="absolute inset-x-6 bottom-0 h-[2px] rounded-full"
+                  style={{ background: "#4dd5f8" }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen w-full bg-white overflow-x-hidden">
+    <div className="min-h-screen w-full bg-white">
       <div
         ref={topbarRef}
         className="sticky top-0 z-50 w-full"
@@ -260,9 +345,11 @@ export default function LojaPage() {
               <Icon name="back" className="h-6 w-6 text-white" />
             </button>
 
-            <div className="text-[22px] sm:text-[25px] font-bold tracking-[-0.02em] text-white">Pizza Blu</div>
+            <div className="text-[22px] font-bold tracking-[-0.02em] text-white sm:text-[25px]">
+              Pizza Blu
+            </div>
 
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-2">
               <button
                 onClick={() => cart.open()}
                 className="relative grid h-11 w-11 place-items-center rounded-2xl transition active:scale-[0.96]"
@@ -273,7 +360,11 @@ export default function LojaPage() {
                 {cart.itemsCount > 0 && (
                   <span
                     className="absolute -right-1 -top-1 grid h-6 min-w-[24px] place-items-center rounded-full px-1 text-[12px] font-extrabold"
-                    style={{ background: AQUA, color: BRAND, boxShadow: "0 10px 20px rgba(79,220,255,0.25)" }}
+                    style={{
+                      background: AQUA,
+                      color: BRAND,
+                      boxShadow: "0 10px 20px rgba(79,220,255,0.25)",
+                    }}
                   >
                     {cart.itemsCount}
                   </span>
@@ -296,7 +387,8 @@ export default function LojaPage() {
               <div
                 className="rounded-2xl p-[2px]"
                 style={{
-                  background: "linear-gradient(180deg, rgba(79,220,255,0.55), rgba(79,220,255,0.12))",
+                  background:
+                    "linear-gradient(180deg, rgba(79,220,255,0.55), rgba(79,220,255,0.12))",
                 }}
               >
                 <div className="rounded-2xl bg-white/95 backdrop-blur-md">
@@ -337,7 +429,10 @@ export default function LojaPage() {
                               style={{ borderBottom: "1px solid rgba(1,27,60,0.08)" }}
                             >
                               <div className="min-w-0 flex-1">
-                                <div className="truncate text-[16px] font-extrabold" style={{ color: "#0b1220" }}>
+                                <div
+                                  className="truncate text-[16px] font-extrabold"
+                                  style={{ color: "#0b1220" }}
+                                >
                                   {it.title}
                                 </div>
                                 <div className="mt-0.5 flex items-center gap-2 text-[13px] font-semibold text-gray-500">
@@ -368,6 +463,17 @@ export default function LojaPage() {
         </div>
       </div>
 
+      {tabsPinned && (
+        <div
+          className="fixed left-0 right-0 z-40"
+          style={{
+            top: topbarHeight,
+          }}
+        >
+          <div className="mx-auto w-full max-w-[600px]">{tabsUi}</div>
+        </div>
+      )}
+
       <div className="mx-auto w-full max-w-[600px] bg-white">
         <div className="px-4 pt-8">
           <div className="flex items-start gap-4">
@@ -381,7 +487,7 @@ export default function LojaPage() {
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="grid grid-cols-3 gap-4 sm:gap-8 text-center">
+              <div className="grid grid-cols-3 gap-4 text-center sm:gap-8">
                 <InfoBlock value="40-60" label="minutos" />
                 <InfoBlock value="R$ 30,00" label="mínimo" />
                 <RatingBlock rating="4.8" total="2.134" />
@@ -389,7 +495,7 @@ export default function LojaPage() {
             </div>
           </div>
 
-          <div className="mt-6 space-y-1 text-[16px] sm:text-[18px] font-semibold leading-snug text-black">
+          <div className="mt-6 space-y-1 text-[16px] font-semibold leading-snug text-black sm:text-[18px]">
             <div className="flex gap-2">
               <span className="mt-[1px]">📍</span>
               <span className="min-w-0">Muito mais que uma pizza, Pizza Blu!</span>
@@ -413,30 +519,11 @@ export default function LojaPage() {
           </div>
         </div>
 
-        <div
-          ref={tabsBarRef}
-          className="sticky z-40 mt-3 top-[calc(env(safe-area-inset-top)+64px)] bg-white border-b"
-          style={{ borderColor: LINE }}
-        >
-          <div className="flex px-4">
-            {TABS.map((t) => {
-              const isActive = t.key === active;
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => scrollToSection(t.key)}
-                  className="relative flex-1 py-3 text-center text-[20px] transition-all"
-                  style={{ color: isActive ? TEXT : MUTED, fontWeight: 900 }}
-                >
-                  {t.label}
-                  {isActive && (
-                    <span className="absolute inset-x-6 bottom-0 h-[2px] rounded-full" style={{ background: "#4dd5f8" }} />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <div ref={tabsSentinelRef} className="mt-3 h-px w-full" />
+
+        {!tabsPinned && tabsUi}
+
+        {tabsPinned && <div style={{ height: tabsBarHeight }} />}
 
         <div className="px-0">
           <div ref={pizzaRef}>
@@ -444,7 +531,9 @@ export default function LojaPage() {
               title={formatSectionTitle("pizza")}
               lineColor={LINE}
               items={pizzas}
-              onItemMount={(id, el) => (itemEls.current[id] = el)}
+              onItemMount={(id, el) => {
+                itemEls.current[id] = el;
+              }}
               onAdd={addToCart}
             />
           </div>
@@ -454,7 +543,9 @@ export default function LojaPage() {
               title={formatSectionTitle("bebidas")}
               lineColor={LINE}
               items={bebidas}
-              onItemMount={(id, el) => (itemEls.current[id] = el)}
+              onItemMount={(id, el) => {
+                itemEls.current[id] = el;
+              }}
               onAdd={addToCart}
             />
           </div>
@@ -464,7 +555,9 @@ export default function LojaPage() {
               title={formatSectionTitle("porcoes")}
               lineColor={LINE}
               items={porcoes}
-              onItemMount={(id, el) => (itemEls.current[id] = el)}
+              onItemMount={(id, el) => {
+                itemEls.current[id] = el;
+              }}
               onAdd={addToCart}
             />
           </div>
@@ -561,7 +654,7 @@ function RatingBlock({ rating, total }: { rating: string; total: string }) {
           {rating}
         </div>
       </div>
-      <div className="text-[14px] font-semibold whitespace-nowrap" style={{ color: BRAND }}>
+      <div className="whitespace-nowrap text-[14px] font-semibold" style={{ color: BRAND }}>
         {total} avaliações
       </div>
     </div>
@@ -570,7 +663,7 @@ function RatingBlock({ rating, total }: { rating: string; total: string }) {
 
 function PromoCardExpanded({ img }: { img: string }) {
   return (
-    <div className="relative w-1/3 aspect-[3/4] overflow-hidden bg-gray-100">
+    <div className="relative aspect-[3/4] w-1/3 overflow-hidden bg-gray-100">
       <img src={img} alt="" className="h-full w-full object-cover" />
     </div>
   );
