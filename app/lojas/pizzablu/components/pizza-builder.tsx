@@ -514,110 +514,110 @@ export default function PizzaBuilder({
                               boxShadow: "0 16px 32px rgba(0,0,0,0.06)",
                             }}
                           >
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <div
-                                  className="truncate text-[18px] font-extrabold tracking-[-0.02em]"
-                                  style={{ color: BRAND }}
-                                >
-                                  {f.name}
-                                </div>
+                            <div className="flex items-start justify-between gap-3">
+  <div className="min-w-0 flex-1 pr-1">
+    <div
+      className="text-[18px] font-extrabold tracking-[-0.02em] leading-tight whitespace-normal break-words"
+      style={{ color: BRAND }}
+    >
+      {f.name}
+    </div>
 
-                                <div
-                                  className="mt-0.5 flex flex-wrap items-center gap-2 text-[13px] font-semibold"
-                                  style={{ color: "rgba(1,27,60,0.55)" }}
-                                >
-                                  <span>{f.tag}</span>
+    <div
+      className="mt-1.5 flex flex-wrap items-center gap-2 text-[13px] font-semibold"
+      style={{ color: "rgba(1,27,60,0.55)" }}
+    >
+      <span>{f.tag}</span>
 
-                                  {isPremiumFlavor(f.name) && (
-                                    <span
-                                      className="rounded-full px-2 py-[2px] text-[12px] font-extrabold"
-                                      style={{
-                                        background: "rgba(79,220,255,0.20)",
-                                        border: "1px solid rgba(79,220,255,0.45)",
-                                        color: BRAND,
-                                      }}
-                                    >
-                                      +{brlNum(ADICIONAL_PREMIUM)}
-                                    </span>
-                                  )}
+      {isPremiumFlavor(f.name) && (
+        <span
+          className="rounded-full px-2 py-[2px] text-[12px] font-extrabold"
+          style={{
+            background: "rgba(79,220,255,0.20)",
+            border: "1px solid rgba(79,220,255,0.45)",
+            color: BRAND,
+          }}
+        >
+          +{brlNum(ADICIONAL_PREMIUM)}
+        </span>
+      )}
 
-                                  {count > 0 && (
-                                    <span
-                                      className="rounded-full px-2 py-[2px] text-[12px] font-extrabold"
-                                      style={{
-                                        background: "rgba(1,27,60,0.06)",
-                                        border: "1px solid rgba(1,27,60,0.10)",
-                                        color: BRAND,
-                                      }}
-                                    >
-                                      {count}x selecionado
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
+      {count > 0 && (
+        <span
+          className="rounded-full px-2 py-[2px] text-[12px] font-extrabold"
+          style={{
+            background: "rgba(1,27,60,0.06)",
+            border: "1px solid rgba(1,27,60,0.10)",
+            color: BRAND,
+          }}
+        >
+          {count}x selecionado
+        </span>
+      )}
+    </div>
+  </div>
 
-                              <div className="flex items-center gap-3">
-                                <button
-                                  onClick={() => removeFlavor(f.name)}
-                                  disabled={!canRemove}
-                                  className="grid place-items-center rounded-[18px]"
-                                  style={{
-                                    width: 48,
-                                    height: 48,
-                                    background: canRemove
-                                      ? "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(243,248,253,0.95) 100%)"
-                                      : "rgba(255,255,255,0.78)",
-                                    border: canRemove
-                                      ? "1px solid rgba(79,220,255,0.25)"
-                                      : "1px solid rgba(1,27,60,0.10)",
-                                    boxShadow: canRemove
-                                      ? "0 12px 24px rgba(1,27,60,0.10), inset 0 1px 0 rgba(255,255,255,0.75)"
-                                      : "none",
-                                    opacity: canRemove ? 1 : 0.45,
-                                    WebkitTapHighlightColor: "transparent",
-                                  }}
-                                  aria-label={`Remover ${f.name}`}
-                                >
-                                  <Icon name="minus" className="h-5 w-5" style={{ color: BRAND }} />
-                                </button>
+  <div className="shrink-0 flex items-center gap-2 sm:gap-3">
+    <button
+      onClick={() => removeFlavor(f.name)}
+      disabled={!canRemove}
+      className="grid place-items-center rounded-[18px]"
+      style={{
+        width: 48,
+        height: 48,
+        background: canRemove
+          ? "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(243,248,253,0.95) 100%)"
+          : "rgba(255,255,255,0.78)",
+        border: canRemove
+          ? "1px solid rgba(79,220,255,0.25)"
+          : "1px solid rgba(1,27,60,0.10)",
+        boxShadow: canRemove
+          ? "0 12px 24px rgba(1,27,60,0.10), inset 0 1px 0 rgba(255,255,255,0.75)"
+          : "none",
+        opacity: canRemove ? 1 : 0.45,
+        WebkitTapHighlightColor: "transparent",
+      }}
+      aria-label={`Remover ${f.name}`}
+    >
+      <Icon name="minus" className="h-5 w-5" style={{ color: BRAND }} />
+    </button>
 
-                                <div
-                                  className="grid place-items-center rounded-[16px] text-[16px] font-extrabold"
-                                  style={{
-                                    minWidth: 42,
-                                    height: 42,
-                                    color: BRAND,
-                                    background: count > 0 ? "rgba(79,220,255,0.16)" : "rgba(1,27,60,0.04)",
-                                    border: `1px solid ${count > 0 ? "rgba(79,220,255,0.30)" : "rgba(1,27,60,0.08)"}`,
-                                  }}
-                                >
-                                  {count}
-                                </div>
+    <div
+      className="grid place-items-center rounded-[16px] text-[16px] font-extrabold"
+      style={{
+        minWidth: 42,
+        height: 42,
+        color: BRAND,
+        background: count > 0 ? "rgba(79,220,255,0.16)" : "rgba(1,27,60,0.04)",
+        border: `1px solid ${count > 0 ? "rgba(79,220,255,0.30)" : "rgba(1,27,60,0.08)"}`,
+      }}
+    >
+      {count}
+    </div>
 
-                                <button
-                                  onClick={() => addFlavor(f.name)}
-                                  disabled={!canAdd}
-                                  className="grid place-items-center rounded-[18px]"
-                                  style={{
-                                    width: 48,
-                                    height: 48,
-                                    background: canAdd
-                                      ? "linear-gradient(180deg, rgba(79,220,255,0.28) 0%, rgba(79,220,255,0.16) 100%)"
-                                      : "rgba(79,220,255,0.12)",
-                                    border: "1px solid rgba(79,220,255,0.45)",
-                                    boxShadow: canAdd
-                                      ? "0 14px 28px rgba(79,220,255,0.20), inset 0 1px 0 rgba(255,255,255,0.35)"
-                                      : "none",
-                                    opacity: canAdd ? 1 : 0.45,
-                                    WebkitTapHighlightColor: "transparent",
-                                  }}
-                                  aria-label={`Adicionar ${f.name}`}
-                                >
-                                  <Icon name="plus" className="h-5 w-5" style={{ color: BRAND }} />
-                                </button>
-                              </div>
-                            </div>
+    <button
+      onClick={() => addFlavor(f.name)}
+      disabled={!canAdd}
+      className="grid place-items-center rounded-[18px]"
+      style={{
+        width: 48,
+        height: 48,
+        background: canAdd
+          ? "linear-gradient(180deg, rgba(79,220,255,0.28) 0%, rgba(79,220,255,0.16) 100%)"
+          : "rgba(79,220,255,0.12)",
+        border: "1px solid rgba(79,220,255,0.45)",
+        boxShadow: canAdd
+          ? "0 14px 28px rgba(79,220,255,0.20), inset 0 1px 0 rgba(255,255,255,0.35)"
+          : "none",
+        opacity: canAdd ? 1 : 0.45,
+        WebkitTapHighlightColor: "transparent",
+      }}
+      aria-label={`Adicionar ${f.name}`}
+    >
+      <Icon name="plus" className="h-5 w-5" style={{ color: BRAND }} />
+    </button>
+  </div>
+</div>
                           </div>
                         );
                       })}
