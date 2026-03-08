@@ -592,7 +592,10 @@ function Section({
   return (
     <div className="px-0">
       <div className="px-4 pt-4 sm:pt-6">
-        <div className="text-[22px] font-extrabold tracking-[-0.02em]" style={{ color: "#47c1e0" }}>
+        <div
+          className="text-[22px] font-extrabold tracking-[-0.02em]"
+          style={{ color: "#47c1e0" }}
+        >
           {title}
         </div>
         <div className="mt-2 h-[1px] w-full" style={{ background: lineColor }} />
@@ -600,31 +603,37 @@ function Section({
 
       <div className="pb-2">
         {items.map((c, idx) => (
-          <div key={c.id} className="px-4" ref={(el) => onItemMount(c.id, el as unknown as HTMLElement | null)}>
+          <div
+            key={c.id}
+            className="px-4"
+            ref={(el) => onItemMount(c.id, el as HTMLElement | null)}
+          >
             <button
               type="button"
               onClick={() => onAdd(c)}
-              className={cn("w-full text-left transition-transform duration-150", "active:scale-[0.985]")}
+              className="block w-full text-left transition-transform duration-150 active:scale-[0.985]"
               style={{ WebkitTapHighlightColor: "transparent" }}
               aria-label={`Adicionar ${c.title} ao carrinho`}
             >
-              <div className={cn("flex items-center justify-between gap-3 sm:gap-4 py-3 sm:py-3")}>
+              <div className="flex items-start justify-between gap-3 py-3">
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[20px] sm:text-[20px] font-semibold tracking-[-0.02em] text-black">
+                  <div className="truncate text-[20px] font-semibold tracking-[-0.02em] text-black">
                     {c.title}
                   </div>
 
                   {c.subtitle && (
-                    <div className="mt-1 text-[14px] sm:text-[15px] leading-snug text-gray-500">{c.subtitle}</div>
+                    <div className="mt-1 text-[14px] leading-snug text-gray-500">
+                      {c.subtitle}
+                    </div>
                   )}
 
-                  <div className="mt-2">
-                    <div className="whitespace-nowrap text-[18px] sm:text-[18px] font-bold text-black">{c.price}</div>
+                  <div className="mt-2 whitespace-nowrap text-[18px] font-bold text-black">
+                    {c.price}
                   </div>
                 </div>
 
                 <div className="shrink-0">
-                  <div className="h-[72px] w-[104px] sm:h-[92px] sm:w-[132px] overflow-hidden rounded-2xl bg-gray-100 grid place-items-center">
+                  <div className="grid h-[72px] w-[104px] place-items-center overflow-hidden rounded-2xl bg-gray-100">
                     {c.img ? (
                       <img src={c.img} alt="" className="h-full w-full object-cover" />
                     ) : (
@@ -635,9 +644,11 @@ function Section({
                   </div>
                 </div>
               </div>
-
-              {idx !== items.length - 1 && <div className="h-[1px] w-full" style={{ background: lineColor }} />}
             </button>
+
+            {idx !== items.length - 1 && (
+              <div className="h-[1px] w-full" style={{ background: lineColor }} />
+            )}
           </div>
         ))}
       </div>
@@ -645,7 +656,9 @@ function Section({
       <style jsx>{`
         button:active > div {
           transform: translateY(1px);
-          box-shadow: 0 1px 0 rgba(255, 255, 255, 0.92) inset, 0 10px 22px rgba(0, 0, 0, 0.06) inset,
+          box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.92) inset,
+            0 10px 22px rgba(0, 0, 0, 0.06) inset,
             0 1px 0 rgba(0, 0, 0, 0.03);
           background: rgba(1, 27, 60, 0.02);
         }
